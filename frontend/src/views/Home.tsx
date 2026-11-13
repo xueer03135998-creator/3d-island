@@ -14,8 +14,6 @@ const GUIDE_BTN =
   'mt-3 min-h-10 rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-md transition-colors hover:bg-primary/90';
 const GHOST_BTN =
   'min-h-10 rounded-md border border-border bg-background px-4 text-sm text-foreground transition-colors hover:bg-secondary';
-const ACT_TOUCH =
-  'inline-flex h-12 w-12 select-none items-center justify-center rounded-full bg-card/90 text-base font-semibold text-foreground shadow-md transition-transform active:scale-95 hover:bg-secondary';
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,19 +49,7 @@ export default function Home() {
         onStand={w.standUp}
         onTalk={w.talk}
       />
-      {ready && touch && !w.selectedId && !w.npcOpen && <Joystick onMove={w.setStick} onRun={w.setRun} />}
-      {ready && touch && !w.selectedId && !w.npcOpen && (
-        <div className="absolute bottom-44 right-3 z-10 flex items-end justify-end">
-          <button
-            type="button"
-            className={ACT_TOUCH}
-            onPointerDown={w.jump}
-            aria-label="跳跃"
-          >
-            跳
-          </button>
-        </div>
-      )}
+      {ready && touch && !w.selectedId && !w.npcOpen && <Joystick onMove={w.setStick} onRun={w.setRun} onJump={w.jump} />}
       {showGuide && (
         <div className="pointer-events-none absolute inset-x-0 bottom-40 z-20 flex justify-center px-4">
           <div className="pointer-events-auto max-w-md rounded-lg border border-border bg-card/95 px-4 py-3 text-center shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
