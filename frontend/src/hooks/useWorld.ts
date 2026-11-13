@@ -58,6 +58,8 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
   const worldRef = useRef<World | null>(null);
   const noticeTimer = useRef(0);
   const recommendedRef = useRef(false);
+  /** 本会话是否已访问过个人档案馆（已访问则不再重复引导） */
+  const archiveVisitedRef = useRef(false);
 
   const flash = useCallback((text: string) => {
     window.clearTimeout(noticeTimer.current);
@@ -75,6 +77,9 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
     try {
       worldRef.current = createWorld(container, {
         onSelect: id => {
+          if (id === 'archive') {
+            archiveVisitedRef.current = true;
+          }
           worldRef.current?.setPaused(true);
           worldRef.current?.setStick(0, 0);
           setSelectedId(id);
@@ -121,8 +126,8 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
     setNpcOpen(false);
     worldRef.current?.setNpcTalking(false);
     worldRef.current?.setPaused(false);
-    // 首次对话结束后，推荐先逛个人档案馆
-    if (!recommendedRef.current) {
+    // 首次对话结束后，若尚未访问过个人档案馆，则推荐先逛档案馆
+    if (!recommendedRef.current && !archiveVisitedRef.current) {
       recommendedRef.current = true;
       setGuideNext(true);
     }
@@ -130,6 +135,9 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
 
   /** 从 NPC 对话直接打开某场馆界面 */
   const openBuilding = useCallback((id: BuildingId) => {
+    if (id === 'archive') {
+      archiveVisitedRef.current = true;
+    }
     setNpcOpen(false);
     setGuideNext(false);
     worldRef.current?.setNpcTalking(false);

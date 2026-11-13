@@ -19,7 +19,8 @@ export const NPC_GREETING: string[] = [
 
 const MENU = ['how', 'halls', 'bye'];
 
-export const HALLS_IDS: BuildingId[] = ['divination', 'canteen', 'heritage', 'archive'];
+/** 个人档案馆放最前面 */
+export const HALLS_IDS: BuildingId[] = ['archive', 'divination', 'canteen', 'heritage'];
 
 export const NPC_TOPICS: NpcTopic[] = [
   {
