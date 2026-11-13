@@ -1,0 +1,94 @@
+/* stylelint-disable */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 96%;
+    --foreground: 250 15% 32%;
+    --card: 40 40% 98%;
+    --card-foreground: 250 15% 32%;
+    --popover: 40 40% 98%;
+    --popover-foreground: 250 15% 32%;
+    --primary: 255 28% 62%;
+    --primary-foreground: 40 40% 98%;
+    --secondary: 210 35% 90%;
+    --secondary-foreground: 250 15% 32%;
+    --muted: 40 25% 91%;
+    --muted-foreground: 250 8% 46%;
+    --accent: 210 35% 90%;
+    --accent-foreground: 250 15% 32%;
+    --destructive: 0 60% 58%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 142 40% 45%;
+    --border: 255 18% 86%;
+    --input: 255 18% 86%;
+    --ring: 255 28% 62%;
+    --radius: 0.625rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5% 26%;
+    --sidebar-primary: 226 84% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 226 84% 55%;
+    --chart-1: 226 84% 55%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 210 20% 98%;
+    --card: 224 50% 8%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 50% 8%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 226 84% 65%;
+    --primary-foreground: 224 71% 4%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 218 11% 65%;
+    --accent: 215 28% 17%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 20% 98%;
+    --success: 142 71% 45%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 226 84% 65%;
+    --sidebar-background: 224 71% 4%;
+    --sidebar-foreground: 240 5% 96%;
+    --sidebar-primary: 226 84% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 240 5% 96%;
+    --sidebar-border: 215 28% 17%;
+    --sidebar-ring: 226 84% 65%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    @apply m-0 h-full w-full overflow-x-hidden;
+  }
+
+  body {
+    @apply bg-background font-sans text-sm leading-relaxed text-foreground;
+  }
+}
