@@ -209,6 +209,37 @@ body{font-family:"Kaiti SC","STKaiti","KaiTi","Songti SC",serif;background:#0d0a
   animation-play-state:paused!important}
 #app.paused .pSprite{animation-play-state:paused!important}
 
+/* ===== 移动端适配（追加） ===== */
+/* 动态视口高度：避免手机地址栏/工具栏裁掉底部 */
+@supports (height:100dvh){
+  body{min-height:100dvh}
+  #app{height:100dvh;max-height:1000px}
+}
+/* iPhone 底部安全区（横条）避让 */
+#app{padding-bottom:env(safe-area-inset-bottom)}
+/* 叙事文字过高时可内部滚动，防止超出屏幕被裁 */
+.narr{max-height:min(62dvh,62vh,460px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+/* 窄屏：收紧留白与字号 */
+@media (max-width:390px){
+  #app{width:100vw}
+  .narr{margin:0 10px 14px;padding:13px 15px}
+  .narr .line{font-size:15.5px}
+  .dlg .say{font-size:14px;padding:8px 11px}
+  .panel .desc{font-size:13px;margin:12px 16px 18px}
+  .pttl{font-size:26px}
+  .prow .btn{padding:9px 16px;font-size:13px}
+}
+/* 短屏/横屏：整体压缩并允许叙事区滚动 */
+@media (max-height:560px){
+  .narr{max-height:56vh;padding:12px 14px}
+  .narr .line{font-size:14.5px;line-height:1.7}
+  .dlg .say{font-size:13.5px}
+  .panel .desc{font-size:12.5px}
+  .opt{padding:9px 12px;font-size:13.5px}
+  .btn{padding:9px 16px;font-size:13.5px}
+  .theatre{width:94%;margin-top:34px}
+}
+
 </style>
 </head>
 <body>
