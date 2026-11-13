@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { NPC_GREETING, NPC_MENU, NPC_NAME, findTopic } from '../data/npcScript.ts';
-import { BUILDING_INFO, type BuildingId } from '../data/buildings.ts';
+import { BUILDING_INFO } from '../data/buildings.ts';
+import type { BuildingId } from '../three/buildings/index.ts';
 
 interface NpcDialogProps {
   open: boolean;

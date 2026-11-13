@@ -1,4 +1,4 @@
-import type { BuildingId } from './buildings.ts';
+import type { BuildingId } from '../three/buildings/index.ts';
 import { ISLAND_NAME } from './site.ts';
 
 export interface NpcTopic {
