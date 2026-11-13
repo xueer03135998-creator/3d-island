@@ -59,7 +59,7 @@ export default function Hud({ nearId, hidden, touch, dialogOpen, ride, npcNear, 
             <button
               type="button"
               onClick={onAsk}
-              className="inline-flex h-11 items-center gap-1.5 rounded-full bg-card/90 px-4 text-sm font-medium text-foreground shadow-md hover:bg-secondary"
+              className="mt-3 inline-flex h-11 items-center gap-1.5 rounded-full bg-card/90 px-4 text-sm font-medium text-foreground shadow-md hover:bg-secondary"
             >
               <MessageCircle size={16} aria-hidden="true" />
               向我提问
