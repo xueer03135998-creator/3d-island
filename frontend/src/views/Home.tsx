@@ -80,7 +80,7 @@ export default function Home() {
         </div>
       )}
       <BuildingPanel buildingId={w.selectedId} onClose={w.closePanel} />
-      <NpcDialog open={w.npcOpen} onClose={w.closeNpc} />
+      <NpcDialog open={w.npcOpen} onClose={w.closeNpc} onOpenBuilding={w.openBuilding} />
       <LoadingOverlay status={w.status} onRetry={w.retry} />
     </main>
   );

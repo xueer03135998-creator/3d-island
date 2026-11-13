@@ -25,6 +25,26 @@ export default defineConfig(({ mode }) => {
         plugins: [tailwindcss(), autoprefixer()],
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          // 分包：three / react 独立 vendor 块 → 并行下载 + 长缓存，提升加载效率
+          manualChunks: (id: string) => {
+            if (id.includes('node_modules/three')) {
+              return 'three';
+            }
+            if (
+              id.includes('node_modules/react') ||
+              id.includes('node_modules/react-router-dom') ||
+              id.includes('node_modules/scheduler')
+            ) {
+              return 'react';
+            }
+            return undefined;
+          },
+        },
+      },
+    },
     server: {
       port: 8070,
       host: '0.0.0.0',

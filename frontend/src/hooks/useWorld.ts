@@ -20,6 +20,7 @@ export interface UseWorldResult {
   guideNext: boolean;
   closePanel: () => void;
   closeNpc: () => void;
+  openBuilding: (id: BuildingId) => void;
   retry: () => void;
   enter: () => void;
   zoom: (dir: 1 | -1) => void;
@@ -121,6 +122,16 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
     }
   }, []);
 
+  /** 从 NPC 对话直接打开某场馆界面 */
+  const openBuilding = useCallback((id: BuildingId) => {
+    setNpcOpen(false);
+    setGuideNext(false);
+    worldRef.current?.setNpcTalking(false);
+    worldRef.current?.setStick(0, 0);
+    worldRef.current?.setPaused(true);
+    setSelectedId(id);
+  }, []);
+
   const toggleBoat = useCallback(() => {
     const ok = worldRef.current?.toggleBoat();
     if (ok === false) {
@@ -148,5 +159,5 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
   const setStick = useCallback((x: number, y: number) => worldRef.current?.setStick(x, y), []);
   const setRun = useCallback((run: boolean) => worldRef.current?.setRun(run), []);
 
-  return { status, nearId, selectedId, ride, npcNear, npcOpen, notice, guideOpen, guideNext, closePanel, closeNpc, retry, enter, zoom, rotate, toggleBoat, standUp, talk, guideTalk, goArchive, skipGuide, jump, setStick, setRun };
+  return { status, nearId, selectedId, ride, npcNear, npcOpen, notice, guideOpen, guideNext, closePanel, closeNpc, openBuilding, retry, enter, zoom, rotate, toggleBoat, standUp, talk, guideTalk, goArchive, skipGuide, jump, setStick, setRun };
 }

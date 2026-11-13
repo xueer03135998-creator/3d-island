@@ -82,6 +82,7 @@ export function createWorld(container: HTMLElement, cb: WorldCallbacks): World {
   camera.layers.enable(1);
 
   // 后处理管线：渲染 → SSAO 环境光遮蔽（半分辨率）→ Bloom 辉光 → ACES 色调映射输出
+  const coarse = isCoarse();
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(world.scene, camera));
   const ssao = new SSAOPass(world.scene, camera, Math.floor(container.clientWidth / 2), Math.floor(container.clientHeight / 2));
@@ -89,7 +90,12 @@ export function createWorld(container: HTMLElement, cb: WorldCallbacks): World {
   ssao.minDistance = 0.012;
   ssao.maxDistance = 1.1;
   composer.addPass(ssao);
-  const bloom = new UnrealBloomPass(new THREE.Vector2(container.clientWidth, container.clientHeight), 0.4, 0.55, 0.85);
+  // 移动端 Bloom 用半分辨率（辉光本就柔和，视觉无差，帧率更稳）
+  const bloomRes = new THREE.Vector2(
+    container.clientWidth / (coarse ? 2 : 1),
+    container.clientHeight / (coarse ? 2 : 1)
+  );
+  const bloom = new UnrealBloomPass(bloomRes, 0.4, 0.55, 0.85);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
   const grade = createGradePass();
@@ -196,7 +202,7 @@ export function createWorld(container: HTMLElement, cb: WorldCallbacks): World {
     camera.updateProjectionMatrix();
     composer.setSize(w, h);
     ssao.setSize(Math.max(1, Math.floor(w / 2)), Math.max(1, Math.floor(h / 2)));
-    bloom.setSize(w, h);
+    bloom.setSize(w / (coarse ? 2 : 1), h / (coarse ? 2 : 1));
     grade.setSize(w, h);
   };
   resize();

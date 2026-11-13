@@ -30,6 +30,8 @@ class SoundEngine {
   private stepFlip = false;
   private birdT = 6;
   private cricketT = 10;
+  private musicT = 12;
+  private animalT = 10;
   muted = false;
 
   constructor() {
@@ -177,6 +179,107 @@ class SoundEngine {
         this.crickets();
       }
       this.cricketT = 6 + Math.random() * 7;
+    }
+    // 轻柔舒缓的背景乐（缓释和弦垫音）
+    this.musicT -= dt;
+    if (this.musicT <= 0) {
+      this.padChord();
+      this.musicT = 11 + Math.random() * 5;
+    }
+    // 偶尔的场景动物叫声（猫/狗）
+    this.animalT -= dt;
+    if (this.animalT <= 0) {
+      if (env.rain < 0.5) {
+        this.animal();
+      }
+      this.animalT = 14 + Math.random() * 18;
+    }
+  }
+
+  /** 轻柔背景乐：慢起慢落的和弦垫音，低音量循环。 */
+  private padChord(): void {
+    if (!this.ready()) {
+      return;
+    }
+    const ctx = this.ctx as AudioContext;
+    const out = this.ambBus as GainNode;
+    const t0 = ctx.currentTime;
+    const chords: number[][] = [
+      [261.63, 329.63, 392.0],
+      [220.0, 261.63, 329.63],
+      [174.61, 220.0, 261.63],
+      [196.0, 246.94, 293.66],
+    ];
+    const chord = chords[Math.floor(Math.random() * chords.length)];
+    chord.forEach((f, i) => {
+      const o1 = ctx.createOscillator();
+      o1.type = 'sine';
+      o1.frequency.value = f;
+      const o2 = ctx.createOscillator();
+      o2.type = 'sine';
+      o2.frequency.value = f * 1.005;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 700;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(0.042, t0 + 1.6);
+      g.gain.linearRampToValueAtTime(0.032, t0 + 5.5);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 9 + i * 0.4);
+      o1.connect(lp);
+      o2.connect(lp);
+      lp.connect(g);
+      g.connect(out);
+      o1.start(t0);
+      o1.stop(t0 + 10);
+      o2.start(t0);
+      o2.stop(t0 + 10);
+    });
+  }
+
+  /** 偶发动物叫声：猫喵或狗吠。 */
+  private animal(): void {
+    if (!this.ready()) {
+      return;
+    }
+    const ctx = this.ctx as AudioContext;
+    const out = this.sfxBus as GainNode;
+    const t0 = ctx.currentTime;
+    if (Math.random() > 0.45) {
+      // 猫叫
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(520, t0);
+      o.frequency.linearRampToValueAtTime(780, t0 + 0.26);
+      o.frequency.linearRampToValueAtTime(470, t0 + 0.55);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(0.05, t0 + 0.12);
+      g.gain.linearRampToValueAtTime(0.0001, t0 + 0.7);
+      o.connect(g);
+      g.connect(out);
+      o.start(t0);
+      o.stop(t0 + 0.75);
+    } else {
+      // 狗吠：几声短促低频噪声
+      for (let k = 0; k < 3; k++) {
+        const t = t0 + k * 0.22;
+        const n = ctx.createBufferSource();
+        n.buffer = this.noiseBuf as AudioBuffer;
+        const f = ctx.createBiquadFilter();
+        f.type = 'bandpass';
+        f.frequency.value = 420;
+        f.Q.value = 1.2;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(0.06, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+        n.connect(f);
+        f.connect(g);
+        g.connect(out);
+        n.start(t);
+        n.stop(t + 0.15);
+      }
     }
   }
 

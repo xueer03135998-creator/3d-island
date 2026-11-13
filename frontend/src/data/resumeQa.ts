@@ -10,7 +10,7 @@ export const QA_ITEMS: QaItem[] = [...QA_PROFILE, ...QA_WORK, ...QA_PROJECTS];
 const PRESET_IDS: Record<QaGroup, string[]> = {
   me: ['intro', 'strength', 'fit', 'plan', 'first-job', 'contact'],
   work: ['internships', 'achievement', 'hardest', 'collab'],
-  project: ['project', 'startup', 'webcoding'],
+  project: ['project', 'startup', 'vibecoding'],
 };
 
 const GROUP_ORDER: QaGroup[] = ['me', 'work', 'project'];

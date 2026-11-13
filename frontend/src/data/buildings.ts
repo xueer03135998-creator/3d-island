@@ -20,8 +20,8 @@ export const BUILDING_INFO: Record<BuildingId, BuildingInfo> = {
     id: 'divination',
     name: '易经占卜馆',
     subtitle: '项目 · 传统文化数字化体验',
-    summary: '独立完成产品设计与 Webcoding：起卦后生成占卜报告与可分享的报告卡片，并支持历史记录回看。',
-    tags: ['产品设计', 'Webcoding', '文化产品'],
+    summary: '独立完成产品设计与 Vibe coding：起卦后生成占卜报告与可分享的报告卡片，并支持历史记录回看。',
+    tags: ['产品设计', 'Vibe coding', '文化产品'],
     embed: { url: 'https://xueer03135998-creator.github.io/yijing-divination/', external: true },
   },
   canteen: {
@@ -29,7 +29,7 @@ export const BUILDING_INFO: Record<BuildingId, BuildingInfo> = {
     name: '食堂小屋',
     subtitle: '项目 · 午餐小助手',
     summary: '帮你决定中午吃什么的小工具，在这里可以直接体验。',
-    tags: ['产品设计', '效率工具', 'Webcoding'],
+    tags: ['产品设计', '效率工具', 'Vibe coding'],
     embed: { url: 'https://xueer03135998-creator.github.io/lunch-helper/', external: true },
   },
   archive: {

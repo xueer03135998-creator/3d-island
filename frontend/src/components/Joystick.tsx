@@ -8,7 +8,7 @@ interface JoystickProps {
 
 const RADIUS = 46;
 const ACT_BTN =
-  'h-14 w-14 touch-none select-none rounded-full border border-border text-sm font-semibold shadow-md transition-colors active:scale-95';
+  'h-14 w-14 touch-none select-none rounded-full border border-border/80 bg-card/60 text-sm font-semibold text-foreground shadow-md backdrop-blur-sm transition-colors active:scale-95 active:bg-card/90';
 
 export default function Joystick({ onMove, onRun, onJump }: JoystickProps) {
   const baseRef = useRef<HTMLDivElement>(null);
@@ -87,8 +87,8 @@ export default function Joystick({ onMove, onRun, onJump }: JoystickProps) {
           style={{ transform: `translate(${knob.x}px, ${knob.y}px)` }}
         />
       </div>
-      <div className="absolute bottom-10 right-4 z-10 flex flex-col items-center gap-3">
-        <button type="button" onPointerDown={onJump} aria-label="跳跃" className={`${ACT_BTN} bg-primary text-primary-foreground`}>
+      <div className="absolute bottom-10 right-4 z-10 flex items-center gap-3">
+        <button type="button" onPointerDown={onJump} aria-label="跳跃" className={ACT_BTN}>
           跳
         </button>
         <button
@@ -101,7 +101,7 @@ export default function Joystick({ onMove, onRun, onJump }: JoystickProps) {
           onPointerUp={runOff}
           onPointerLeave={runOff}
           onPointerCancel={runOff}
-          className={`${ACT_BTN} ${running ? 'bg-primary text-primary-foreground' : 'bg-card/70 text-foreground'}`}
+          className={`${ACT_BTN} ${running ? 'bg-primary/80 text-primary-foreground' : ''}`}
         >
           奔跑
         </button>

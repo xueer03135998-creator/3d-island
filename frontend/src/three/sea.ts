@@ -161,6 +161,8 @@ function polarGrid(inner: number, outer: number, rings: number, segs: number): T
 }
 
 export function createSea(fogNear: number, fogFar: number): Sea {
+  const coarse =
+    typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
   const material = new THREE.ShaderMaterial({
     vertexShader: VERT,
     fragmentShader: FRAG,
@@ -179,7 +181,8 @@ export function createSea(fogNear: number, fogFar: number): Sea {
       uFogRange: { value: new THREE.Vector2(fogNear, fogFar) },
     },
   });
-  const mesh = new THREE.Mesh(polarGrid(10, 520, 72, 144), material);
+  // 移动端降低海面网格细分（远看无差，帧率更稳）
+  const mesh = new THREE.Mesh(polarGrid(10, 520, coarse ? 54 : 72, coarse ? 108 : 144), material);
   mesh.position.y = SEA_LEVEL;
   mesh.renderOrder = 1;
   mesh.frustumCulled = false;
