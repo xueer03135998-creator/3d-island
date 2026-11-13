@@ -11,31 +11,39 @@ const FONT = '"PingFang SC", "Microsoft YaHei", sans-serif';
 function drawPill(text: string, subtitle: string): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = 640;
-  canvas.height = 220;
+  canvas.height = 240;
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     return canvas;
   }
-  ctx.fillStyle = 'rgba(228, 224, 210, 0.96)';
+  ctx.fillStyle = 'rgba(240, 235, 220, 0.97)';
   ctx.beginPath();
-  const h = subtitle ? 150 : 104;
+  const h = subtitle ? 160 : 108;
   const dy = subtitle ? 0 : 24;
   ctx.roundRect(16, 16 + dy, 608, h, 56);
   ctx.fill();
-  ctx.strokeStyle = 'rgba(122, 114, 152, 0.95)';
-  ctx.lineWidth = 6;
+  ctx.strokeStyle = 'rgba(88, 78, 118, 0.98)';
+  ctx.lineWidth = 8;
   ctx.stroke();
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#3c3a4c';
-  ctx.font = `600 58px ${FONT}`;
-  ctx.fillText(text, 320, subtitle ? 74 : 68 + dy);
+  // 场馆名称：更粗更大、加深加投影，清晰醒目
+  ctx.fillStyle = '#1d1a2b';
+  ctx.shadowColor = 'rgba(20, 15, 40, 0.35)';
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 2;
+  ctx.font = `800 66px ${FONT}`;
+  ctx.fillText(text, 320, subtitle ? 76 : 68 + dy);
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
   if (subtitle) {
-    ctx.fillStyle = '#6c6a82';
-    ctx.font = `400 30px ${FONT}`;
-    ctx.fillText(subtitle, 320, 126);
+    // 简短介绍：加粗加深
+    ctx.fillStyle = '#49445e';
+    ctx.font = `600 34px ${FONT}`;
+    ctx.fillText(subtitle, 320, 132);
   }
-  ctx.fillStyle = 'rgba(228, 224, 210, 0.96)';
+  ctx.fillStyle = 'rgba(240, 235, 220, 0.97)';
   ctx.beginPath();
   const tail = 16 + dy + h - 2;
   ctx.moveTo(300, tail);
@@ -51,7 +59,7 @@ export function createLabel(text: string, anchor: THREE.Vector3, buildingId: str
   tex.colorSpace = THREE.SRGBColorSpace;
   const mat = new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true, fog: false });
   const sprite = new THREE.Sprite(mat);
-  const scale = new THREE.Vector2(6.4, 2.2);
+  const scale = new THREE.Vector2(6.4, 2.4);
   sprite.scale.set(scale.x, scale.y, 1);
   sprite.position.copy(anchor);
   sprite.renderOrder = 20;
