@@ -155,7 +155,6 @@ export class Controls {
       this.clearTarget();
       this.pointers.clear();
       this.stick.set(0, 0);
-      this.o.character.setCrouch(false);
     }
   }
 
@@ -246,10 +245,6 @@ export class Controls {
     }
   }
 
-  setCrouch(v: boolean): void {
-    this.o.character.setCrouch(v);
-  }
-
   private listen<K extends keyof HTMLElementEventMap>(el: HTMLElement, type: K, fn: (e: HTMLElementEventMap[K]) => void, opt?: AddEventListenerOptions): void {
     el.addEventListener(type, fn, opt);
     this.cleanups.push(() => el.removeEventListener(type, fn));
@@ -311,9 +306,6 @@ export class Controls {
     } else if (isDown && e.code === 'Space' && !e.repeat) {
       e.preventDefault();
       this.o.onJump();
-    } else if (e.code === 'KeyC' || e.code === 'ControlLeft' || e.code === 'ControlRight') {
-      e.preventDefault();
-      this.o.character.setCrouch(isDown);
     }
   }
 
@@ -678,7 +670,7 @@ export class Controls {
       if (ride.mode === 'sit' && dir.lengthSq() > 0) {
         ride.stand();
       }
-      ch.update(dt, dir.x, dir.y, isRun && !ch.crouching, this.o.colliders);
+      ch.update(dt, dir.x, dir.y, isRun, this.o.colliders);
     }
     if (this.target && dir.lengthSq() > 0) {
       this.stuck = Math.hypot(ch.x - bx, ch.z - bz) < dt * 0.8 ? this.stuck + dt : 0;

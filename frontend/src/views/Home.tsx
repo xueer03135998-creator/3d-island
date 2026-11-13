@@ -53,18 +53,13 @@ export default function Home() {
       />
       {ready && touch && !w.selectedId && !w.npcOpen && <Joystick onMove={w.setStick} onRun={w.setRun} />}
       {ready && touch && !w.selectedId && !w.npcOpen && (
-        <div className="absolute bottom-44 right-3 z-10 flex flex-col items-end gap-2 sm:right-4">
+        <div className="absolute bottom-44 right-3 z-10 flex items-end justify-end">
           <button
             type="button"
             className={ACT_TOUCH}
-            onPointerDown={() => w.setCrouch(true)}
-            onPointerUp={() => w.setCrouch(false)}
-            onPointerLeave={() => w.setCrouch(false)}
-            aria-label="下蹲"
+            onPointerDown={w.jump}
+            aria-label="跳跃"
           >
-            蹲
-          </button>
-          <button type="button" className={ACT_TOUCH} onClick={w.jump} aria-label="跳跃">
             跳
           </button>
         </div>

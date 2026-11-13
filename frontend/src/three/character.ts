@@ -95,8 +95,6 @@ export class Character {
   private rowPower = 0;
   private readonly ripples: THREE.Mesh[] = [];
   private stepS = 1;
-  private crouch = false;
-  private crouchMix = 0;
   private hopAmp = 0.8;
   onWater: ((x: number, z: number, enter: boolean) => void) | null = null;
   onEdge: (() => void) | null = null;
@@ -173,10 +171,6 @@ export class Character {
     return this.posed;
   }
 
-  get crouching(): boolean {
-    return this.crouch;
-  }
-
   get facing(): number {
     return this.heading;
   }
@@ -218,7 +212,7 @@ export class Character {
       return;
     }
     const mag = Math.min(1, Math.hypot(dirX, dirZ));
-    const base = this.inWater ? (run ? 4.0 : 2.9) : run ? 7.5 : this.crouch ? 2.2 : 4.2;
+    const base = this.inWater ? (run ? 4.0 : 2.9) : run ? 7.5 : 4.2;
     const target = mag > 0.01 ? base * mag : 0;
     this.speed += (target - this.speed) * Math.min(1, dt * 10);
     if (mag > 0.01) {
@@ -335,12 +329,7 @@ export class Character {
         lift = Math.abs(Math.sin(u * Math.PI * 2)) * this.hopAmp * (1 - u * 0.4);
       }
     }
-    // 下蹲：压低身形并微缩，平滑过渡
-    this.crouchMix += ((this.crouch ? 1 : 0) - this.crouchMix) * Math.min(1, dt * 8);
-    const cs = 1 + 0.07 * this.crouchMix;
-    const cy = 1 - 0.24 * this.crouchMix;
-    this.body.scale.set(cs, cy, cs);
-    this.body.position.y = bob + lift - 0.3 * this.crouchMix;
+    this.body.position.y = bob + lift;
   }
 
   private animateSeated(dt: number): void {
@@ -368,9 +357,5 @@ export class Character {
   jump(): void {
     this.hopAmp = 1.25;
     this.hopT = 0.0001;
-  }
-
-  setCrouch(v: boolean): void {
-    this.crouch = v;
   }
 }

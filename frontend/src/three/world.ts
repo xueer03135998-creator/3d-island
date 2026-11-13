@@ -43,7 +43,6 @@ export interface World {
   talk: () => void;
   guideTalk: () => void;
   jump: () => void;
-  setCrouch: (v: boolean) => void;
   setNpcTalking: (v: boolean) => void;
   dispose: () => void;
 }
@@ -277,7 +276,6 @@ export function createWorld(container: HTMLElement, cb: WorldCallbacks): World {
       sound.jump();
       controls.jump();
     },
-    setCrouch: v => controls.setCrouch(v),
     setNpcTalking: v => world.npc.setTalking(v),
     dispose: () => {
       cancelAnimationFrame(raf);

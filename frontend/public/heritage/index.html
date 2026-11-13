@@ -114,6 +114,15 @@ body{font-family:"Kaiti SC","STKaiti","KaiTi","Songti SC",serif;background:#0d0a
 .shake{animation:shk .3s}
 @keyframes shk{0%,100%{transform:translate(0)}25%{transform:translate(-5px,2px)}75%{transform:translate(5px,-2px)}}
 
+/* === 音游：四轨音符下落 === */
+.rhythm{position:absolute;inset:0;z-index:4;display:flex;justify-content:space-between;padding:0 14px}
+.rhythm .lane{position:relative;flex:1;height:100%;pointer-events:none}
+.rhythm .target{position:absolute;left:2%;right:2%;bottom:22%;height:4px;background:rgba(240,201,119,.75);box-shadow:0 0 10px rgba(240,201,119,.6);border-radius:2px}
+.rhythm .target::after{content:"◈";position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--gold2);opacity:.85}
+.rhythm .note{position:absolute;left:50%;transform:translateX(-50%);width:46px;height:46px;margin-top:-23px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;background:radial-gradient(circle at 35% 30%,#fff6,#f0c977cc 60%,#d4a24a);border:2px solid var(--gold2);box-shadow:0 4px 12px rgba(0,0,0,.5),0 0 10px rgba(240,201,119,.4);z-index:5;transition:opacity .18s,transform .18s}
+.rhythm .note.hit{opacity:0;transform:translateX(-50%) scale(.4)}
+.rhythm .note.miss{opacity:0;filter:grayscale(1)}
+
 /* === 小游戏②：爆款实验室 === */
 .lab{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 18px 18px}
 .lab .mini-title{font-size:20px;color:var(--gold2);letter-spacing:2px;margin-bottom:4px}
@@ -238,6 +247,19 @@ body{font-family:"Kaiti SC","STKaiti","KaiTi","Songti SC",serif;background:#0d0a
   .opt{padding:9px 12px;font-size:13.5px}
   .btn{padding:9px 16px;font-size:13.5px}
   .theatre{width:94%;margin-top:34px}
+}
+/* 窄屏：音游与舞台控件同步缩放 */
+@media (max-width:380px){
+  .theatre{width:96%;border-width:3px}
+  .pupShow{width:100px}
+  .act-btn{width:70px;padding:8px 2px;font-size:12px}
+  .act-btn .bi{font-size:19px}
+  .rhythm .note{width:40px;height:40px;font-size:19px}
+}
+@media (max-height:560px){
+  .rhythm .target{bottom:18%}
+  .rhythm .note{width:38px;height:38px;font-size:17px}
+  .rhythm .lane{padding:0 2px}
 }
 
 </style>
@@ -475,7 +497,7 @@ function infoPanel(cfg, onNext){
   return p;
 }
 
-/* ============ 小游戏①：掌中好戏（节奏表演·配乐） ============ */
+/* ============ 小游戏①：掌中好戏（音游·音符下落） ============ */
 function gamePuppetShow(onWin){
   const g=gen;
   clearStage();
@@ -498,7 +520,10 @@ function gamePuppetShow(onWin){
   th.appendChild(el('div','spotlight'));
   const pup=el('img','pupShow'); pup.src=A.pHappy; th.appendChild(pup);
   const aud=el('div','audience','🙍 🙍 🙍 🙍 🙍 🙍'); th.appendChild(aud);
-  const cueBox=el('div'); th.appendChild(cueBox);
+  // —— 四轨音符下落 ——
+  const rhythm=el('div','rhythm');
+  const laneEls=[0,1,2,3].map(()=>{ const l=el('div','lane'); l.appendChild(el('div','target')); rhythm.appendChild(l); return l; });
+  th.appendChild(rhythm);
   const hit=el('div','hitword'); th.appendChild(hit);
   wrap.appendChild(th);
   const bar=el('div','cheerbar'); const barI=el('i'); bar.appendChild(barI); wrap.appendChild(bar);
@@ -507,10 +532,13 @@ function gamePuppetShow(onWin){
   const btns=moves.map((m,i)=>{const b=el('button','act-btn','<span class="bi">'+m[1]+'</span>'+m[0]); b.onclick=()=>tap(i); acts.appendChild(b); return b;});
   wrap.appendChild(acts); sc.appendChild(wrap);
 
-  let cheer=0, comboN=0, cur=-1, beatStart=0, dur=1500, running=true, ro=null, wasRunning=true;
-  Audio_.start(); addClean(()=>Audio_.stop());
-  pauseHooks={ onPause(){ wasRunning=running; running=false; clearTimeout(ro); Audio_.stop(); },
-               onResume(){ if(g!==gen) return; if(wasRunning){ running=true; Audio_.start(); spawnCue(); } } };
+  let cheer=0, comboN=0, running=true, wasRunning=true;
+  let raf=0, last=0, notes=[], spawnT=0, chartIdx=0, t0=0;
+  const spb=60/Audio_.bpm, fallDur=spb*2.4*1000, TG=0.78;
+  Audio_.start(); addClean(()=>{ Audio_.stop(); cancelAnimationFrame(raf); });
+  pauseHooks={ onPause(){ wasRunning=running; running=false; Audio_.stop(); },
+               onResume(){ if(g!==gen) return; if(wasRunning){ running=true; last=performance.now(); Audio_.start(); } } };
+
   function setCheer(v){cheer=Math.max(0,Math.min(100,v)); document.getElementById('pg').textContent=Math.round(cheer); barI.style.width=cheer+'%';
     aud.textContent = cheer>55 ? '👏 👏 👏 👏 👏 👏' : '🙍 🙍 🙍 🙍 🙍 🙍';
     aud.style.filter='grayscale('+Math.max(0,.5-cheer/180)+') brightness('+(.6+cheer/130)+')';}
@@ -520,32 +548,49 @@ function gamePuppetShow(onWin){
   function showHit(w,col){hit.textContent=w; hit.style.color=col; hit.classList.remove('show'); void hit.offsetWidth; hit.classList.add('show');}
   function floatCheer(txt){const c=el('div','cheer',txt); c.style.left=rnd(28,64)+'%'; c.style.top=rnd(38,52)+'%'; th.appendChild(c); setTimeout(()=>c.remove(),1000);}
   function shakeMiss(){th.classList.remove('shake'); void th.offsetWidth; th.classList.add('shake');}
-  function spawnCue(){
-    if(!running||PAUSED||g!==gen) return;
-    cur=Math.floor(Math.random()*4); const m=moves[cur];
-    const c=el('div','cue'); const ring=el('div','ring'); c.appendChild(ring);
-    c.appendChild(el('div','cueicon',m[1])); c.appendChild(el('div','cuename',m[0]));
-    cueBox.innerHTML=''; cueBox.appendChild(c);
-    ring.style.transform='scale(2.3)'; ring.style.opacity='.25';
-    requestAnimationFrame(()=>{ring.style.transition='transform '+dur+'ms linear,opacity '+dur+'ms'; ring.style.transform='scale(.5)'; ring.style.opacity='1';});
-    beatStart=Date.now(); clearTimeout(ro);
-    ro=setTimeout(()=>{ if(running&&cur>=0&&g===gen) miss(); }, dur+140);
+
+  function spawnNote(lane){
+    const n=el('div','note'); n.textContent=moves[lane][1];
+    laneEls[lane].appendChild(n);
+    notes.push({el:n, lane:lane, pos:0, active:true});
   }
   function tap(i){
-    if(!running||cur<0||PAUSED) return;
-    if(i!==cur){ setCombo(0); setCheer(cheer-3); shakeMiss(); Audio_.hit(0); return; }
-    const prog=(Date.now()-beatStart)/dur; cur=-1; clearTimeout(ro); cueBox.innerHTML='';
+    if(!running||PAUSED||g!==gen) return;
+    const cand=notes.filter(n=>n.active&&n.lane===i);
+    if(!cand.length){ setCombo(0); setCheer(cheer-2); shakeMiss(); Audio_.hit(0); return; }
+    let best=cand[0]; for(const n of cand){ if(Math.abs(n.pos-TG)<Math.abs(best.pos-TG)) best=n; }
+    const off=Math.abs(best.pos-TG); best.active=false;
     let pts,word,col,q;
-    if(prog>=.62){pts=11;word='彩！';col='#f0c977';q=2;} else if(prog>=.32){pts=8;word='好！';col='#4a8f6d';q=1;} else {pts=5;word='妙';col='#d4a24a';q=0;}
+    if(off<=0.07){pts=11;word='彩！';col='#f0c977';q=2;}
+    else if(off<=0.17){pts=8;word='好！';col='#4a8f6d';q=1;}
+    else {pts=5;word='妙';col='#d4a24a';q=0;}
+    best.el.classList.add('hit'); setTimeout(()=>best.el.remove(),200);
     setCombo(comboN+1); pts=Math.round(pts*(1+Math.min(comboN,5)*0.2));
     perform(moves[i][2]); showHit(word,col); floatCheer(['🌸','✨','🎉','👏'][Math.floor(Math.random()*4)]); Audio_.hit(q);
     setCheer(cheer+pts);
     if(cheer>=100){ win(); return; }
-    const t=setTimeout(spawnCue,340); addClean(()=>clearTimeout(t));
   }
-  function miss(){cur=-1; cueBox.innerHTML=''; setCombo(0); setCheer(cheer-5); shakeMiss(); showHit('…','#b9a',''); if(running){const t=setTimeout(spawnCue,360); addClean(()=>clearTimeout(t));}}
+  function frame(now){
+    raf=requestAnimationFrame(frame);
+    if(!running||PAUSED||g!==gen) return;
+    const dt=last?now-last:0; last=now; const t=now-t0;
+    if(t>=spawnT){
+      spawnNote(Math.floor(rnd(0,3.999))); chartIdx++;
+      spawnT=t+spb*(2+Math.floor(rnd(0,2.999)))*1000;
+    }
+    for(let i=notes.length-1;i>=0;i--){
+      const n=notes[i];
+      if(!n.active) continue;
+      n.pos+=dt/fallDur;
+      n.el.style.top=(n.pos*100)+'%';
+      if(n.pos>=TG+0.05){
+        n.active=false; n.el.classList.add('miss'); setCombo(0); setCheer(cheer-5); shakeMiss(); showHit('…','#b9a','');
+        setTimeout(()=>n.el.remove(),300);
+      }
+    }
+  }
   function win(){
-    running=false; clearTimeout(ro); cueBox.innerHTML=''; pup.className='pupShow m-bow'; Audio_.stop();
+    running=false; cancelAnimationFrame(raf); pup.className='pupShow m-bow'; Audio_.stop();
     for(let k=0;k<10;k++) setTimeout(()=>{if(g===gen)floatCheer(['🌸','✨','🎉','👏','❤️'][k%5]);},k*90);
     setTimeout(()=>{ if(g!==gen) return;
       infoPanel({puppet:'pHappy', mini:'满堂喝彩', title:'台下却静悄悄…',
@@ -553,7 +598,10 @@ function gamePuppetShow(onWin){
         btn:'继续故事'}, onWin);
     },900);
   }
-  spawnCue();
+  t0=performance.now(); spawnT=400;
+  // 开局预铺几个音符，更快进入状态
+  for(let k=0;k<3;k++){ spawnNote(k); notes[notes.length-1].pos=-(0.12+k*0.14); }
+  raf=requestAnimationFrame(frame);
 }
 
 /* ============ 小游戏②：爆款实验室 ============ */

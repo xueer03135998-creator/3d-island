@@ -24,14 +24,14 @@ interface HudProps {
 
 const HINTS = [
   'WASD / 方向键 移动',
-  'Shift 奔跑 · C 下蹲 · 空格 跳跃',
+  'Shift 奔跑 · 空格 跳跃',
   '拖拽 或 Q / R 旋转视角',
   '滚轮 或 + / - 缩放',
   '点击地面 自动走过去',
   '点击建筑 查看介绍',
   '点点树、小船、小猫小狗、广场圆盘，有彩蛋；点小球和小狗一起玩',
 ];
-const TOUCH_HINT = '摇杆移动 · 单指拖动转视角 · 双指缩放 · 右下跳蹲 · 点点看';
+const TOUCH_HINT = '摇杆移动 · 按住奔跑 · 右下跳跃 · 双指拖移缩放 · 点点看';
 
 const ACTION =
   'inline-flex min-h-10 items-center gap-2 rounded-md bg-card px-4 py-2 text-foreground shadow-md animate-in fade-in slide-in-from-bottom-2 duration-200 hover:bg-secondary';

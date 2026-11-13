@@ -31,7 +31,6 @@ export interface UseWorldResult {
   goArchive: () => void;
   skipGuide: () => void;
   jump: () => void;
-  setCrouch: (v: boolean) => void;
   setStick: (x: number, y: number) => void;
   setRun: (run: boolean) => void;
 }
@@ -146,9 +145,8 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
   }, []);
   const skipGuide = useCallback(() => setGuideNext(false), []);
   const jump = useCallback(() => worldRef.current?.jump(), []);
-  const setCrouch = useCallback((v: boolean) => worldRef.current?.setCrouch(v), []);
   const setStick = useCallback((x: number, y: number) => worldRef.current?.setStick(x, y), []);
   const setRun = useCallback((run: boolean) => worldRef.current?.setRun(run), []);
 
-  return { status, nearId, selectedId, ride, npcNear, npcOpen, notice, guideOpen, guideNext, closePanel, closeNpc, retry, enter, zoom, rotate, toggleBoat, standUp, talk, guideTalk, goArchive, skipGuide, jump, setCrouch, setStick, setRun };
+  return { status, nearId, selectedId, ride, npcNear, npcOpen, notice, guideOpen, guideNext, closePanel, closeNpc, retry, enter, zoom, rotate, toggleBoat, standUp, talk, guideTalk, goArchive, skipGuide, jump, setStick, setRun };
 }
