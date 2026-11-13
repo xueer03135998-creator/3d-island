@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { BuildingEntry, BuildingId, Collider } from './buildings/index.ts';
 import type { Character } from './character.ts';
 import { SEA_LEVEL, groundHeight } from './palette.ts';
+import { createNavGrid, type NavGrid } from './pathfind.ts';
 import { PIER_TOP, isOnPier, withinSwimArea } from './walk.ts';
 import type { EggKind } from './interactions.ts';
 import type { Ride } from './ride.ts';
@@ -129,9 +130,15 @@ export class Controls {
   /** 新手引导：镜头自动切到兔子导游面前，引导点击对话 */
   private guide = false;
   private guideStarted = false;
+  /** 岛屿导航网格（A* 寻路）与当前路径 */
+  private readonly nav: NavGrid;
+  private path: Array<[number, number]> | null = null;
+  private pathIdx = 0;
+  private pathRetried = false;
 
   constructor(options: ControlsOptions) {
     this.o = options;
+    this.nav = createNavGrid(options.colliders);
     this.marker = new THREE.Mesh(
       new THREE.RingGeometry(0.35, 0.5, 20),
       new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, fog: false })
@@ -478,10 +485,13 @@ export class Controls {
     return null;
   }
 
-  private setTarget(x: number, z: number, y: number, arrive: Arrive | null = null): void {
+  private setTarget(x: number, z: number, y: number, arrive: Arrive | null = null, usePath = true): void {
     this.target = new THREE.Vector3(x, 0, z);
     this.arrive = arrive;
     this.stuck = 0;
+    this.pathRetried = false;
+    this.path = usePath ? this.nav.findPath(this.o.character.x, this.o.character.z, x, z) : null;
+    this.pathIdx = 0;
     this.marker.position.set(x, y, z);
     this.marker.visible = true;
   }
@@ -489,6 +499,8 @@ export class Controls {
   private clearTarget(): void {
     this.target = null;
     this.arrive = null;
+    this.path = null;
+    this.pathIdx = 0;
     this.marker.visible = false;
   }
 
@@ -583,7 +595,7 @@ export class Controls {
         this.o.onEgg('sea', p);
       }
       if (withinSwimArea(p.x, p.z)) {
-        this.setTarget(p.x, p.z, SEA_LEVEL + 0.12);
+        this.setTarget(p.x, p.z, SEA_LEVEL + 0.12, null, false);
       }
       return;
     }
@@ -647,19 +659,51 @@ export class Controls {
     this.inputDir(dir);
     let isRun = this.runHeld || this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
     if (dir.lengthSq() === 0 && this.target) {
-      const dx = this.target.x - ch.x;
-      const dz = this.target.z - ch.z;
-      const d = Math.hypot(dx, dz);
-      const reach = this.arrive?.reach ?? 0.35;
-      if (d < reach || this.stuck > 0.6) {
-        const arrive = this.arrive;
-        this.clearTarget();
-        if (arrive && d < Math.max(reach * 2, 2.6)) {
-          arrive.fn();
+      if (this.stuck > 0.6) {
+        if (this.path && !this.pathRetried) {
+          // 卡住：按当前位置重算路径
+          this.pathRetried = true;
+          this.path = this.nav.findPath(ch.x, ch.z, this.target.x, this.target.z);
+          this.pathIdx = 0;
+          this.stuck = 0;
+        } else {
+          const arrive = this.arrive;
+          const fd = Math.hypot(ch.x - this.target.x, ch.z - this.target.z);
+          const reach = this.arrive?.reach ?? 0.35;
+          this.clearTarget();
+          if (arrive && fd < Math.max(reach * 2, 2.6)) {
+            arrive.fn();
+          }
         }
       } else {
-        dir.set(dx / d, dz / d).multiplyScalar(Math.min(1, d / 1.2 + 0.3));
-        isRun = d > 14;
+        let goalX = this.target.x;
+        let goalZ = this.target.z;
+        const reach = this.arrive?.reach ?? 0.35;
+        if (this.path && this.pathIdx < this.path.length) {
+          const p = this.path[this.pathIdx];
+          if (Math.hypot(ch.x - p[0], ch.z - p[1]) < 0.55) {
+            this.pathIdx++;
+          }
+        }
+        if (this.path && this.pathIdx < this.path.length) {
+          const p = this.path[this.pathIdx];
+          goalX = p[0];
+          goalZ = p[1];
+        }
+        const dx = goalX - ch.x;
+        const dz = goalZ - ch.z;
+        const d = Math.hypot(dx, dz);
+        const isFinal = !this.path || this.pathIdx >= this.path.length;
+        if (isFinal && d < reach) {
+          const arrive = this.arrive;
+          this.clearTarget();
+          if (arrive && d < Math.max(reach * 2, 2.6)) {
+            arrive.fn();
+          }
+        } else {
+          dir.set(dx / d, dz / d).multiplyScalar(Math.min(1, d / 1.6 + 0.5));
+          isRun = d > 14;
+        }
       }
     }
     const bx = ch.x;
@@ -675,7 +719,8 @@ export class Controls {
     if (this.target && dir.lengthSq() > 0) {
       this.stuck = Math.hypot(ch.x - bx, ch.z - bz) < dt * 0.8 ? this.stuck + dt : 0;
     }
-    if (ride.mode === 'none') {
+    // 自动行走途中不触发进门/交互，到达后再恢复
+    if (ride.mode === 'none' && this.target === null) {
       this.checkDoor(dir);
     }
   }

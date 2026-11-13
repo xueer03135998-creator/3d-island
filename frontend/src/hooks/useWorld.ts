@@ -18,9 +18,13 @@ export interface UseWorldResult {
   guideOpen: boolean;
   /** 与兔子对话后，推荐先逛个人档案馆 */
   guideNext: boolean;
+  /** 「向我提问」面板 */
+  askOpen: boolean;
   closePanel: () => void;
   closeNpc: () => void;
   openBuilding: (id: BuildingId) => void;
+  openAsk: () => void;
+  closeAsk: () => void;
   retry: () => void;
   enter: () => void;
   zoom: (dir: 1 | -1) => void;
@@ -49,6 +53,7 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
   const [notice, setNotice] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideNext, setGuideNext] = useState(false);
+  const [askOpen, setAskOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const worldRef = useRef<World | null>(null);
   const noticeTimer = useRef(0);
@@ -102,6 +107,7 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
       setRide(IDLE_RIDE);
       setGuideOpen(false);
       setGuideNext(false);
+      setAskOpen(false);
       recommendedRef.current = false;
     };
   }, [containerRef, attempt, flash]);
@@ -132,6 +138,16 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
     setSelectedId(id);
   }, []);
 
+  const openAsk = useCallback(() => {
+    setAskOpen(true);
+    worldRef.current?.setPaused(true);
+  }, []);
+
+  const closeAsk = useCallback(() => {
+    setAskOpen(false);
+    worldRef.current?.setPaused(false);
+  }, []);
+
   const toggleBoat = useCallback(() => {
     const ok = worldRef.current?.toggleBoat();
     if (ok === false) {
@@ -159,5 +175,5 @@ export function useWorld(containerRef: RefObject<HTMLDivElement | null>): UseWor
   const setStick = useCallback((x: number, y: number) => worldRef.current?.setStick(x, y), []);
   const setRun = useCallback((run: boolean) => worldRef.current?.setRun(run), []);
 
-  return { status, nearId, selectedId, ride, npcNear, npcOpen, notice, guideOpen, guideNext, closePanel, closeNpc, openBuilding, retry, enter, zoom, rotate, toggleBoat, standUp, talk, guideTalk, goArchive, skipGuide, jump, setStick, setRun };
+  return { status, nearId, selectedId, ride, npcNear, npcOpen, notice, guideOpen, guideNext, askOpen, closePanel, closeNpc, openBuilding, openAsk, closeAsk, retry, enter, zoom, rotate, toggleBoat, standUp, talk, guideTalk, goArchive, skipGuide, jump, setStick, setRun };
 }
