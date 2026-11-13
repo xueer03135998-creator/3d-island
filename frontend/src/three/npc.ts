@@ -175,6 +175,8 @@ export function createNpc(x: number, z: number, topY: number): Npc {
   bubble.position.set(0, 3.1, 0);
   const proc = new THREE.Group();
   proc.add(body, head, armL, armR);
+  // 先隐藏备用模型：避免加载期间展示错误的兔子，仅当 GLB 加载失败时兜底显示
+  proc.visible = false;
   const holder = new THREE.Group();
   group.add(proc, holder, bubble);
   let model: THREE.Group | null = null;
@@ -193,7 +195,9 @@ export function createNpc(x: number, z: number, topY: number): Npc {
     },
     undefined,
     () => {
-      proc.visible = true;
+      if (!model && !disposed) {
+        proc.visible = true;
+      }
     }
   );
   const hit = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 3, 8));
