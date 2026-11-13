@@ -51,10 +51,12 @@ const NPC_NEAR = 3.8;
 const DOOR_TRIGGER = 1.6;
 const DOOR_REARM = 5;
 const ZOOM_MIN = 4;
-const ZOOM_MAX = 36;
+const ZOOM_MAX = 120;
 const PITCH_MIN = -0.32;
 const PITCH_MAX = 1.25;
 const PITCH_BASE = 0.1;
+/** 拉远到此距离后自动进入俯瞰视角 */
+const OVERVIEW_DIST = 75;
 const EGG_KINDS: EggKind[] = ['nature', 'boat', 'hero', 'plaza', 'sea'];
 
 function clampZoom(v: number): number {
@@ -115,6 +117,10 @@ export class Controls {
   private readonly pointers = new Map<number, { x: number; y: number }>();
   private pinchDist = 0;
   private pinched = false;
+  /** 双指中心点（用于双指拖动平移视野） */
+  private pinchMid = { x: 0, y: 0 };
+  /** 手动平移/俯瞰时相机不再跟随角色；重新移动角色后恢复跟随 */
+  private manualView = false;
   private stick = new THREE.Vector2();
   private runHeld = false;
   private readonly look = new THREE.Vector3();
@@ -326,6 +332,7 @@ export class Controls {
     if (this.pointers.size === 2) {
       const [a, b] = [...this.pointers.values()];
       this.pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+      this.pinchMid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
       this.pinched = true;
       this.down = null;
       return;
@@ -344,6 +351,31 @@ export class Controls {
       this.distGoal = clampZoom((this.distGoal * this.pinchDist) / cur);
     }
     this.pinchDist = cur;
+    // 双指中心点位移 = 平移视野（画面跟随手指）
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const dx = mid.x - this.pinchMid.x;
+    const dy = mid.y - this.pinchMid.y;
+    this.pinchMid = mid;
+    if (Math.hypot(dx, dy) > 0.5) {
+      this.panBy(dx, dy);
+    }
+  }
+
+  /** 双指拖动平移相机视野中心，并暂停对角色的跟随。 */
+  private panBy(dx: number, dy: number): void {
+    const h = Math.max(1, this.o.dom.clientHeight);
+    const scale = (2 * this.dist * Math.tan(THREE.MathUtils.degToRad(this.o.camera.fov / 2))) / h;
+    const sy = Math.sin(this.yaw);
+    const cy = Math.cos(this.yaw);
+    const rx = cy;
+    const rz = -sy;
+    const fx = -sy;
+    const fz = -cy;
+    this.look.x += (-dx * rx + dy * fx) * scale;
+    this.look.z += (-dx * rz + dy * fz) * scale;
+    this.look.y = Math.max(0.6, groundHeight(this.look.x, this.look.z) + 1.2);
+    this.manualView = true;
+    this.clearTarget();
   }
 
   private onMove(e: PointerEvent): void {
@@ -717,9 +749,7 @@ export class Controls {
       this.yawGoal = this.yaw;
     } else {
       this.yaw += (this.yawGoal - this.yaw) * Math.min(1, dt * 8);
-    } (ch.x - this.look.x) * k;
-    this.look.z += (ch.z - this.look.z) * k;
-    this.look.y += (ch.group.position.y + 1.4 - this.look.y) * k;
+    }
     if (this.guide) {
       // 镜头缓移到兔子导游面前（兔子面向 +z 出生点方向）
       this.look.x += (this.o.npcPos.x - this.look.x) * k;
@@ -728,6 +758,25 @@ export class Controls {
       this.distGoal = 4.6;
       this.yawGoal = 0;
       this.pitch += (0.45 - this.pitch) * Math.min(1, dt * 3);
+    } else if (this.manualView) {
+      // 手动平移/俯瞰：保持当前视野中心；重新移动角色时恢复跟随
+      const reFollow = this.target !== null || this.keys.size > 0 || this.stick.lengthSq() > 0.02;
+      if (reFollow && this.distGoal < OVERVIEW_DIST - 10) {
+        this.manualView = false;
+      }
+    } else {
+      this.look.x += (ch.x - this.look.x) * k;
+      this.look.z += (ch.z - this.look.z) * k;
+      this.look.y += (ch.group.position.y + 1.4 - this.look.y) * k;
+    }
+    // 俯瞰：拉远到一定距离后镜头抬升俯角并回到岛屿中心，可俯瞰全岛
+    const overview = THREE.MathUtils.smoothstep(OVERVIEW_DIST, OVERVIEW_DIST + 32, this.distGoal);
+    if (overview > 0) {
+      this.manualView = true;
+      this.look.x += (0 - this.look.x) * k * overview;
+      this.look.z += (0 - this.look.z) * k * overview;
+      this.look.y += (0.9 - this.look.y) * k * overview;
+      this.pitch += (1.12 - this.pitch) * Math.min(1, dt * 2.5 * overview);
     }
     const yaw = this.yaw + (1 - e) * 0.9;
     const base = Math.max(this.pitch, PITCH_BASE);
