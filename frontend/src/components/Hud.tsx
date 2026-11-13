@@ -14,7 +14,6 @@ interface HudProps {
   notice: string | null;
   soundOn: boolean;
   onToggleSound: () => void;
-  onAsk: () => void;
   onEnter: () => void;
   onZoom: (dir: 1 | -1) => void;
   onRotate: (dir: 1 | -1) => void;
@@ -38,7 +37,7 @@ const ACTION =
   'inline-flex min-h-10 items-center gap-2 rounded-md bg-card px-4 py-2 text-foreground shadow-md animate-in fade-in slide-in-from-bottom-2 duration-200 hover:bg-secondary';
 const ROUND = 'inline-flex h-10 w-10 items-center justify-center rounded-md bg-card/90 text-foreground shadow-md hover:bg-secondary';
 
-export default function Hud({ nearId, hidden, touch, dialogOpen, ride, npcNear, notice, soundOn, onToggleSound, onAsk, onEnter, onZoom, onRotate, onBoat, onStand, onTalk }: HudProps) {
+export default function Hud({ nearId, hidden, touch, dialogOpen, ride, npcNear, notice, soundOn, onToggleSound, onEnter, onZoom, onRotate, onBoat, onStand, onTalk }: HudProps) {
   if (hidden) {
     return null;
   }
@@ -55,16 +54,7 @@ export default function Hud({ nearId, hidden, touch, dialogOpen, ride, npcNear, 
           <button type="button" className={ROUND} onClick={onToggleSound} aria-label={soundOn ? '静音' : '开启声音'} title={soundOn ? '静音' : '开启声音'}>
             {soundOn ? <Volume2 size={18} aria-hidden="true" /> : <VolumeX size={18} aria-hidden="true" />}
           </button>
-          {touch ? (
-            <button
-              type="button"
-              onClick={onAsk}
-              className="inline-flex h-11 items-center gap-1.5 rounded-full bg-card/90 px-4 text-sm font-medium text-foreground shadow-md hover:bg-secondary"
-            >
-              <MessageCircle size={16} aria-hidden="true" />
-              向我提问
-            </button>
-          ) : (
+          {!touch && (
             <>
               <button type="button" className={ROUND} onClick={() => onZoom(1)} aria-label="拉近视角">
                 <Plus size={18} aria-hidden="true" />

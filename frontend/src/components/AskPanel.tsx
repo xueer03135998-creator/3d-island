@@ -1,94 +1,116 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { ChevronDown, GripVertical, X } from 'lucide-react';
+import { ChevronDown, MessageCircle, X } from 'lucide-react';
 import ResumeAsk from './ResumeAsk.tsx';
 
 interface AskPanelProps {
+  open: boolean;
+  onOpen: () => void;
   onClose: () => void;
 }
 
-/** 可拖动、可收起/展开的浮动「向我提问」面板。 */
-export default function AskPanel({ onClose }: AskPanelProps) {
+/**
+ * 「向我提问」：
+ * - 引导组件 = 半透明、可拖动的悬浮圆条，默认靠下位置（与上下组件留空）
+ * - 功能栏 = 点击后以底部半窗固定位置展开的问答面板
+ */
+export default function AskPanel({ open, onOpen, onClose }: AskPanelProps) {
   const [pos, setPos] = useState<{ x: number; y: number }>(() => ({
-    // 初始位置：右上角功能键下方，留足空间
-    x: Math.max(10, window.innerWidth - 334),
-    y: 150,
+    x: Math.max(12, window.innerWidth - 176),
+    y: Math.max(130, Math.round(window.innerHeight * 0.5)),
   }));
-  const [collapsed, setCollapsed] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const pillRef = useRef<HTMLButtonElement>(null);
   const drag = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
 
-  const onDown = (e: ReactPointerEvent<HTMLElement>): void => {
+  const onDown = (e: ReactPointerEvent<HTMLButtonElement>): void => {
     drag.current = { sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y };
     setDragging(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
-  const onMove = (e: ReactPointerEvent<HTMLElement>): void => {
+  const onMove = (e: ReactPointerEvent<HTMLButtonElement>): void => {
     const d = drag.current;
     if (!d) {
       return;
     }
-    const w = panelRef.current?.offsetWidth ?? 320;
-    const h = (panelRef.current?.querySelector('header') as HTMLElement | null)?.offsetHeight ?? 44;
+    const w = pillRef.current?.offsetWidth ?? 150;
+    const h = pillRef.current?.offsetHeight ?? 40;
     setPos({
       x: Math.max(8, Math.min(window.innerWidth - w - 8, d.ox + (e.clientX - d.sx))),
       y: Math.max(8, Math.min(window.innerHeight - h - 8, d.oy + (e.clientY - d.sy))),
     });
   };
 
-  const onUp = (e: ReactPointerEvent<HTMLElement>): void => {
+  const onUp = (e: ReactPointerEvent<HTMLButtonElement>): void => {
+    const d = drag.current;
+    const moved = d ? Math.hypot(e.clientX - d.sx, e.clientY - d.sy) >= 6 : true;
     drag.current = null;
     setDragging(false);
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
+    // 轻点（未拖动）才触发开合
+    if (!moved) {
+      if (open) {
+        onClose();
+      } else {
+        onOpen();
+      }
+    }
   };
 
   return (
-    <div
-      ref={panelRef}
-      role="dialog"
-      aria-label="向我提问"
-      className={`fixed z-40 flex w-[min(330px,calc(100vw-20px))] select-none flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xl ${
-        dragging ? 'cursor-grabbing' : ''
-      }`}
-      style={{ left: pos.x, top: pos.y }}
-    >
-      <header
-        className="flex cursor-grab touch-none items-center gap-2 border-b border-border bg-secondary/60 px-3 py-2"
+    <>
+      {/* 引导圆条：半透明、可拖动 */}
+      <button
+        ref={pillRef}
+        type="button"
+        aria-label="向我提问"
+        title="向我提问（拖动可换位置，轻点开合）"
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
+        className={`fixed z-40 flex touch-none select-none items-center gap-1.5 rounded-full border border-white/25 bg-black/35 px-4 py-2.5 text-sm font-medium text-white shadow-lg backdrop-blur-sm transition-opacity ${
+          dragging ? 'cursor-grabbing opacity-80' : 'cursor-grab opacity-90 hover:opacity-100'
+        }`}
+        style={{ left: pos.x, top: pos.y }}
       >
-        <GripVertical size={14} className="text-muted-foreground" aria-hidden="true" />
-        <h2 className="flex-1 truncate text-sm font-semibold">
-          {collapsed ? '向我提问' : '向我提问 · 岛主杨博驿'}
-        </h2>
-        <button
-          type="button"
-          onClick={() => setCollapsed(v => !v)}
-          aria-label={collapsed ? '展开' : '收起'}
-          title={collapsed ? '展开' : '收起'}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
-        >
-          <ChevronDown size={16} aria-hidden="true" className={collapsed ? 'rotate-180' : ''} />
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="关闭提问"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
-        >
-          <X size={16} aria-hidden="true" />
-        </button>
-      </header>
-      {!collapsed && (
-        <div className="min-h-0 max-h-[58vh] overflow-y-auto p-3">
-          <ResumeAsk />
+        <MessageCircle size={15} aria-hidden="true" />
+        向我提问
+      </button>
+
+      {/* 功能栏：底部半窗固定位置 */}
+      {open && (
+        <div className="fixed inset-x-0 bottom-0 z-40 flex justify-center p-2 pb-4">
+          <div className="flex max-h-[52vh] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <header className="flex items-center gap-2 border-b border-border px-4 py-2">
+              <h2 className="flex-1 truncate text-sm font-semibold">向我提问 · 岛主杨博驿</h2>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="收起"
+                title="收起"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
+              >
+                <ChevronDown size={16} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="关闭"
+                title="关闭"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </header>
+            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              <ResumeAsk />
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

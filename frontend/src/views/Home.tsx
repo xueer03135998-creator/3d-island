@@ -43,7 +43,6 @@ export default function Home() {
         notice={w.notice}
         soundOn={soundOn}
         onToggleSound={toggleSound}
-        onAsk={w.openAsk}
         onEnter={w.enter}
         onZoom={w.zoom}
         onRotate={w.rotate}
@@ -83,7 +82,7 @@ export default function Home() {
       )}
       <BuildingPanel buildingId={w.selectedId} onClose={w.closePanel} />
       <NpcDialog open={w.npcOpen} onClose={w.closeNpc} onOpenBuilding={w.openBuilding} />
-      {w.askOpen && <AskPanel onClose={w.closeAsk} />}
+      <AskPanel open={w.askOpen} onOpen={w.openAsk} onClose={w.closeAsk} />
       <LoadingOverlay status={w.status} onRetry={w.retry} />
     </main>
   );
