@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
-import AskPanel from '../components/AskPanel.tsx';
+import { X } from 'lucide-react';
 import BuildingPanel from '../components/BuildingPanel.tsx';
 import Hud from '../components/Hud.tsx';
 import Joystick from '../components/Joystick.tsx';
 import LoadingOverlay from '../components/LoadingOverlay.tsx';
 import NpcDialog from '../components/NpcDialog.tsx';
 import PaintOverlay from '../components/PaintOverlay.tsx';
+import ResumeAsk from '../components/ResumeAsk.tsx';
 import { ISLAND_NAME } from '../data/site.ts';
 import { sound } from '../three/audio.ts';
 import { useTouchLayout } from '../hooks/useTouchLayout.ts';
@@ -43,6 +44,7 @@ export default function Home() {
         notice={w.notice}
         soundOn={soundOn}
         onToggleSound={toggleSound}
+        onAsk={w.openAsk}
         onEnter={w.enter}
         onZoom={w.zoom}
         onRotate={w.rotate}
@@ -82,7 +84,26 @@ export default function Home() {
       )}
       <BuildingPanel buildingId={w.selectedId} onClose={w.closePanel} />
       <NpcDialog open={w.npcOpen} onClose={w.closeNpc} onOpenBuilding={w.openBuilding} />
-      <AskPanel open={w.askOpen} onOpen={w.openAsk} onClose={w.closeAsk} />
+      {w.askOpen && (
+        <div className="absolute inset-0 z-30 flex items-end justify-center bg-black/40 p-2 sm:items-center sm:p-4">
+          <div className="flex max-h-[86dvh] w-full max-w-xl flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <header className="flex items-center gap-2 border-b border-border px-4 py-2">
+              <h2 className="flex-1 text-sm font-semibold">向我提问 · 岛主杨博驿</h2>
+              <button
+                type="button"
+                onClick={w.closeAsk}
+                aria-label="关闭提问"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </header>
+            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              <ResumeAsk />
+            </div>
+          </div>
+        </div>
+      )}
       <LoadingOverlay status={w.status} onRetry={w.retry} />
     </main>
   );
